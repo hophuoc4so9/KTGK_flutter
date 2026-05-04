@@ -1,0 +1,1 @@
+# Food model structure placeholder
