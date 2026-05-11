@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="hotuanphuoc_2224802010872_lab5"
+        android:label="hotuanphuoc_2224802010872_lab4"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

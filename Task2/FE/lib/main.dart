@@ -1,66 +1,74 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:hotuanphuoc_2224802010872_lab5/api/album.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:hotuanphuoc_2224802010872_lab4/add_contact_page.dart';
+import 'package:hotuanphuoc_2224802010872_lab4/controllers/auth_services.dart';
+import 'package:hotuanphuoc_2224802010872_lab4/firebase_options.dart';
+import 'package:hotuanphuoc_2224802010872_lab4/home.dart';
+import 'package:hotuanphuoc_2224802010872_lab4/login_page.dart';
+import 'package:hotuanphuoc_2224802010872_lab4/sign_up_page.dart';
 
-void main() {
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Contacts App',
       theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        textTheme: GoogleFonts.soraTextTheme(),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.orange.shade800,
+        ),
+        useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      routes: {
+        "/": (context) => const CheckUser(),
+        "/login": (context) => const LoginPage(),
+        "/signup": (context) => const SignupPage(),
+        "/home": (context) => const HomeScreen(),
+        "/addContact": (context) => const AddContact(),
+      },
     );
   }
 }
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-
-  final String title;
+class CheckUser extends StatefulWidget {
+  const CheckUser({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<CheckUser> createState() => _CheckUserState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  late Future<Album> futureAlbum;
-
+class _CheckUserState extends State<CheckUser> {
   @override
   void initState() {
+    AuthServices().isUserLoggedIn().then((isLoggedIn) {
+      if (isLoggedIn) {
+        Navigator.pushReplacementNamed(context, "/home");
+      } else {
+        Navigator.pushReplacementNamed(context, "/login");
+      }
+    });
     super.initState();
-    futureAlbum = fetchAlbum();
+
+    
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(title: const Text('Fetch Data Example')),
-        body: Center(
-          child: FutureBuilder<Album>(
-            future: futureAlbum,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return Text(snapshot.data!.title);
-              } else if (snapshot.hasError) {
-                return Text('${snapshot.error}');
-              }
-
-              // By default, show a loading spinner.
-              return const CircularProgressIndicator();
-            },
-          ),
-        ),
-      
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
-
 }
