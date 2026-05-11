@@ -45,3 +45,31 @@ app.*.map.json
 /android/app/release
 *.mp4
 *.webm
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# Build
+build/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated
+*.iml
+.metadata
+
+# Firebase
+firebase.json
+
+# Optional
+pubspec.lock
