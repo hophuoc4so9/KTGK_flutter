@@ -1,1 +1,0 @@
-# User model structure placeholder
