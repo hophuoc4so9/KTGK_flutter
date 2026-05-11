@@ -36,6 +36,4 @@ A Firebase-backed messenger app with authentication flow, settings, and a home s
 - **Splash** → **Login/Signup** → **Home** → **Settings**
 - The app checks authentication state before routing to the home screen.
 
-## Author Contribution
-- **hophuoc4so9**: Primary project implementation (Task1 and Task2 apps).
-- **minhnghi123**: Documentation updates (this README).
+
