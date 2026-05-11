@@ -1,8 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:hotuanphuoc_2224802010872_lab4/controllers/user_service.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:hotuanphuoc_2224802010872_lab4/common/common.dart';
 import 'package:hotuanphuoc_2224802010872_lab4/controllers/chat_service.dart';
+import 'package:hotuanphuoc_2224802010872_lab4/controllers/user_service.dart';
 import 'package:hotuanphuoc_2224802010872_lab4/screens/chat_screen.dart';
 import 'package:hotuanphuoc_2224802010872_lab4/screens/settings_screen.dart';
 
@@ -16,10 +18,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   String search = "";
-  int _limit = 10;
+  final int _limit = 20;
   final UserService _userService = UserService();
   final ChatService _chatService = ChatService();
-  Color themeColor = const Color(0xFF6C63FF);
   late String currentUserId;
 
   @override
@@ -31,18 +32,41 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Keep AppBar exactly as your original code with the "..." PopupMenuButton
       appBar: AppBar(
-        title: const Text("Home"),
+        backgroundColor: AppTheme.navyDark,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.chat_rounded, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              "Messenger",
+              style: GoogleFonts.sora(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
             onSelected: (value) {
               if (value == 'settings') {
-                print("Settings");
                 Navigator.pushNamed(context, '/settings');
               } else if (value == 'logout') {
-                 _userService.logout().then((_) {
-                  Navigator.pushReplacementNamed(context, '/login');
+                _userService.logout().then((_) {
+                  if (context.mounted) {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  }
                 });
               }
             },
@@ -51,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 value: 'settings',
                 child: Row(
                   children: [
-                    Icon(Icons.settings),
+                    Icon(Icons.settings_outlined),
                     SizedBox(width: 10),
                     Text("Settings"),
                   ],
@@ -72,21 +96,14 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: _buildBody(),
-      // Add bottom navigation bar to switch between tabs
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        selectedItemColor: themeColor,
-        unselectedItemColor: Colors.grey,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onTap: (index) => setState(() => _currentIndex = index),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.people_outline),
             activeIcon: Icon(Icons.people),
-            label: "Home",
+            label: "Contacts",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.chat_bubble_outline),
@@ -94,9 +111,9 @@ class _HomeScreenState extends State<HomeScreen> {
             label: "Chats",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
-            label: "Settings",
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: "Profile",
           ),
         ],
       ),
@@ -105,120 +122,162 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBody() {
     if (_currentIndex == 0) {
-      // TAB 1: Original Home user list
-      return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: _userService.getUsers(
-          limit: _limit,
-          search: search,
-        ),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-              ),
-            );
-          } else {
-            return ListView.builder(
-              padding: const EdgeInsets.all(10.0),
-              itemCount: snapshot.data!.docs.length,
-              itemBuilder: (context, index) {
-                return buildItem(
-                  context,
-                  snapshot.data!.docs[index],
-                );
-              },
-            );
-          }
-        },
-      );
+      return _buildContactsTab();
     } else if (_currentIndex == 1) {
-      // TAB 2: Recent Chats list stream
-      return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: _chatService.getRecentChats(currentUserId),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(themeColor),
-              ),
-            );
-          }
-
-          final docs = snapshot.data!.docs;
-
-          // Sort recent chats by timestamp descending
-          docs.sort((a, b) {
-            final tA = a.data()['timestamp'] ?? '0';
-            final tB = b.data()['timestamp'] ?? '0';
-            return tB.compareTo(tA);
-          });
-
-          if (docs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.forum_outlined, size: 80, color: Colors.grey.shade300),
-                  const SizedBox(height: 16),
-                  Text(
-                    "No recent conversations",
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            itemCount: docs.length,
-            itemBuilder: (context, index) {
-              return RecentChatTile(
-                chatroomData: docs[index].data(),
-                currentUserId: currentUserId,
-              );
-            },
-          );
-        },
-      );
+      return _buildChatsTab();
     } else {
-      // TAB 3: Embedded Settings screen
-      return const SettingsScreen();
+      return const SettingsScreen(embedded: true);
     }
   }
 
-  // Exact original buildItem code for displaying each contact
-  Widget buildItem(
+  Widget _buildContactsTab() {
+    return Column(
+      children: [
+        // Search bar
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              )
+            ],
+          ),
+          child: TextField(
+            onChanged: (v) => setState(() => search = v),
+            decoration: InputDecoration(
+              hintText: "Search contacts...",
+              hintStyle: AppTheme.caption.copyWith(fontSize: 14),
+              prefixIcon: const Icon(Icons.search, color: AppTheme.primary),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+          ),
+        ),
+
+        Expanded(
+          child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: _userService.getUsers(limit: _limit, search: search),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppTheme.primary)),
+                );
+              }
+              final docs = snapshot.data!.docs;
+              if (docs.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.person_search,
+                          size: 72, color: Colors.grey.shade300),
+                      const SizedBox(height: 12),
+                      Text("No contacts found",
+                          style: AppTheme.caption.copyWith(fontSize: 15)),
+                    ],
+                  ),
+                );
+              }
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: docs.length,
+                itemBuilder: (context, index) =>
+                    _buildContactItem(context, docs[index]),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContactItem(
     BuildContext context,
     QueryDocumentSnapshot<Map<String, dynamic>> document,
   ) {
-    Map<String, dynamic> data = document.data();
+    final data = document.data();
+    final String nickname = data['nickname'] ?? data['email'] ?? 'No Name';
+    final String photoUrl = data['photoUrl'] ?? '';
+    final String aboutMe = data['aboutMe'] ?? '';
 
-    return Card(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          )
+        ],
+      ),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundImage: data['photoUrl'] != null && data['photoUrl'] != ''
-              ? NetworkImage(data['photoUrl'])
-              : null,
-          child: data['photoUrl'] == null || data['photoUrl'] == ''
-              ? const Icon(Icons.person)
-              : null,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Stack(
+          children: [
+            CircleAvatar(
+              radius: 26,
+              backgroundImage:
+                  photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+              backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
+              child: photoUrl.isEmpty
+                  ? Text(
+                      nickname.isNotEmpty ? nickname[0].toUpperCase() : '?',
+                      style: const TextStyle(
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18),
+                    )
+                  : null,
+            ),
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: AppTheme.onlineGreen,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+              ),
+            ),
+          ],
         ),
-        title: Text(data['nickname'] ?? data['email'] ?? 'No Name'),
-        subtitle: Text(data['aboutMe'] ?? ''),
+        title: Text(
+          nickname,
+          style: GoogleFonts.sora(
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              color: AppTheme.navyDark),
+        ),
+        subtitle: aboutMe.isNotEmpty
+            ? Text(aboutMe,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.caption.copyWith(fontSize: 13))
+            : null,
+        trailing: const Icon(Icons.chevron_right,
+            color: AppTheme.primary, size: 20),
         onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => ChatScreen(
                 peerId: document.id,
-                peerName: data['nickname'] ?? '',
-                peerAvatar: data['photoUrl'] ?? '',
+                peerName: nickname,
+                peerAvatar: photoUrl,
               ),
             ),
           );
@@ -226,9 +285,62 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Widget _buildChatsTab() {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: _chatService.getRecentChats(currentUserId),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(
+            child: CircularProgressIndicator(
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(AppTheme.primary)),
+          );
+        }
+
+        final docs = snapshot.data!.docs;
+        docs.sort((a, b) {
+          final tA = a.data()['timestamp'] ?? '0';
+          final tB = b.data()['timestamp'] ?? '0';
+          return tB.compareTo(tA);
+        });
+
+        if (docs.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.forum_outlined,
+                    size: 80, color: Colors.grey.shade300),
+                const SizedBox(height: 16),
+                Text("No conversations yet",
+                    style: GoogleFonts.sora(
+                        color: Colors.grey.shade600,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                Text("Go to Contacts to start chatting",
+                    style: AppTheme.caption),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
+            return RecentChatTile(
+              chatroomData: docs[index].data(),
+              currentUserId: currentUserId,
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
-// --- SUB-WIDGET: RECENT CHAT TILE ---
 class RecentChatTile extends StatelessWidget {
   final Map<String, dynamic> chatroomData;
   final String currentUserId;
@@ -250,22 +362,26 @@ class RecentChatTile extends StatelessWidget {
     if (peerId.isEmpty) return const SizedBox.shrink();
 
     return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('users').doc(peerId).get(),
+      future:
+          FirebaseFirestore.instance.collection('users').doc(peerId).get(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            height: 70,
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+            height: 76,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            child: const Center(
+                child: CircularProgressIndicator(strokeWidth: 2)),
           );
         }
 
-        final peerData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
-        final String nickname = peerData['nickname'] ?? peerData['email'] ?? 'User';
+        final peerData =
+            snapshot.data!.data() as Map<String, dynamic>? ?? {};
+        final String nickname =
+            peerData['nickname'] ?? peerData['email'] ?? 'User';
         final String photoUrl = peerData['photoUrl'] ?? '';
         final String lastMessage = chatroomData['lastMessage'] ?? '';
         final String timestampStr = chatroomData['timestamp'] ?? '';
@@ -273,21 +389,69 @@ class RecentChatTile extends StatelessWidget {
         String formattedTime = '';
         if (timestampStr.isNotEmpty) {
           try {
-            final date = DateTime.fromMillisecondsSinceEpoch(int.parse(timestampStr));
-            formattedTime = "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
+            final date = DateTime.fromMillisecondsSinceEpoch(
+                int.parse(timestampStr));
+            final now = DateTime.now();
+            if (DateUtils.isSameDay(date, now)) {
+              formattedTime =
+                  "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
+            } else {
+              formattedTime =
+                  "${date.day}/${date.month}";
+            }
           } catch (_) {}
         }
 
-        return Card(
-          elevation: 0.5,
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        return Container(
+          margin:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              )
+            ],
+          ),
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: CircleAvatar(
-              radius: 26,
-              backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-              child: photoUrl.isEmpty ? const Icon(Icons.person, size: 28) : null,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 26,
+                  backgroundImage:
+                      photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                  backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
+                  child: photoUrl.isEmpty
+                      ? Text(
+                          nickname.isNotEmpty
+                              ? nickname[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18),
+                        )
+                      : null,
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: AppTheme.onlineGreen,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                  ),
+                ),
+              ],
             ),
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -295,31 +459,27 @@ class RecentChatTile extends StatelessWidget {
                 Expanded(
                   child: Text(
                     nickname,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
+                    style: GoogleFonts.sora(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: AppTheme.navyDark),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Text(
-                  formattedTime,
-                  style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
-                ),
+                Text(formattedTime,
+                    style:
+                        AppTheme.caption.copyWith(color: Colors.grey.shade400)),
               ],
             ),
             subtitle: Container(
-              margin: const EdgeInsets.only(top: 4),
+              margin: const EdgeInsets.only(top: 3),
               child: Text(
                 lastMessage,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 13,
-                ),
+                style: AppTheme.caption.copyWith(
+                    color: Colors.grey.shade600, fontSize: 13),
               ),
             ),
             onTap: () {

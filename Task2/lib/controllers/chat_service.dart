@@ -1,15 +1,9 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'image_upload_service.dart';
 
 class ChatService {
-  final FirebaseFirestore _firestore =
-      FirebaseFirestore.instance;
-
-  final FirebaseStorage _storage =
-      FirebaseStorage.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Stream<QuerySnapshot<Map<String, dynamic>>> getMessages(
     String groupChatId,
@@ -31,7 +25,7 @@ class ChatService {
     required String content,
     required int type,
   }) async {
-    DocumentReference messageRef = _firestore
+    final DocumentReference messageRef = _firestore
         .collection('chatrooms')
         .doc(groupChatId)
         .collection('messages')
@@ -47,12 +41,15 @@ class ChatService {
       'type': type,
     });
 
-    // Save parent metadata for Recent Chats listing
     await _firestore.collection('chatrooms').doc(groupChatId).set({
       'users': [currentUserId, peerId],
       'lastMessage': type == 0
           ? content
-          : (type == 1 ? '[Hình ảnh]' : '[Sticker]'),
+          : type == 1
+              ? '[Image]'
+              : type == 2
+                  ? '[Sticker]'
+                  : '[Video]',
       'timestamp': timestamp,
       'lastSenderId': currentUserId,
     }, SetOptions(merge: true));
@@ -65,7 +62,11 @@ class ChatService {
         .snapshots();
   }
 
-  Future<String> uploadChatImage(File imageFile) async {
+  Future<String> uploadChatImage(XFile imageFile) async {
     return await ImageUploadService.uploadImage(imageFile);
+  }
+
+  Future<String> uploadChatVideo(XFile videoFile) async {
+    return await ImageUploadService.uploadVideo(videoFile);
   }
 }

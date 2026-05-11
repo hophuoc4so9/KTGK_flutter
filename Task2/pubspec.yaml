@@ -41,9 +41,14 @@ dependencies:
   google_fonts: ^8.0.2
   google_sign_in: ^6.1.5
   firebase_storage:
-  image_picker: 
-  shared_preferences: 
+  image_picker:
+  shared_preferences:
   http: ^1.2.1
+  flutter_dotenv: ^5.2.1
+  crypto: ^3.0.3
+  cached_network_image: ^3.4.1
+  video_player: ^2.9.2
+  intl: ^0.20.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -68,6 +73,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - .env
     - images/
   #   - images/a_dot_ham.jpeg
 

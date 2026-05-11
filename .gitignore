@@ -74,3 +74,4 @@ firebase.json
 # Optional
 pubspec.lock
 Task2/lib/controllers/image_upload_service.dart
+Task2/.env
