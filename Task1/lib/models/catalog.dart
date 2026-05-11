@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 
-
 class CatalogModel {
-  List <String> items = [
-    'Apple',
-    'Banana',
-    'Orange',
-    'Grapes',
-    'Mango',
-    'Pineapple',
-    'Strawberry',
-    'Watermelon',
-    'Peach',
-    'Cherry',
-    'Blueberry',
-    'Kiwi',
-
-    
+  final List<String> items = const [
+    'Code Smell',
+    'Control Flow',
+    'Interpreter',
+    'Recursion',
+    'Sprint',
+    'Heisenbug',
+    'Spaghetti',
+    'Hydra Code',
+    'Off-By-One',
+    'Scope',
+    'Callback',
+    'Closure',
+    'Automata',
+    'Bit Shift',
+    'Currying',
   ];
-  Item getById(int id) => Item(id, items[id%items.length]);
+
+  Item getById(int id) => Item(id, items[id % items.length]);
 
   Item getByPosition(int position) => getById(position);
-
 }
 
 @immutable
@@ -31,10 +31,12 @@ class Item {
   final Color color;
   final int price = 42;
 
-  Item(this.id, this.name) : color = Colors.primaries[id % Colors.primaries.length];
+  Item(this.id, this.name)
+      : color = Colors.primaries[id % Colors.primaries.length];
+
   @override
   int get hashCode => id;
+
   @override
   bool operator ==(Object other) => other is Item && other.id == id;
-
 }
