@@ -24,6 +24,8 @@ class ChatService {
     required String peerId,
     required String content,
     required int type,
+    Map<String, dynamic>? replyTo,
+    String? status,
   }) async {
     final DocumentReference messageRef = _firestore
         .collection('chatrooms')
@@ -33,13 +35,16 @@ class ChatService {
 
     final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
 
-    await messageRef.set({
+    final messageData = <String, dynamic>{
       'idFrom': currentUserId,
       'idTo': peerId,
       'timestamp': timestamp,
       'content': content,
       'type': type,
-    });
+    };
+    if (replyTo != null) messageData['replyTo'] = replyTo;
+    if (status != null) messageData['status'] = status;
+    await messageRef.set(messageData);
 
     await _firestore.collection('chatrooms').doc(groupChatId).set({
       'users': [currentUserId, peerId],

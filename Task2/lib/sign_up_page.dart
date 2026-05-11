@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hotuanphuoc_2224802010872_lab4/common/common.dart';
 import 'package:hotuanphuoc_2224802010872_lab4/controllers/auth_services.dart';
 
@@ -9,22 +10,45 @@ class SignupPage extends StatefulWidget {
   State<StatefulWidget> createState() => _SignupPageState();
 }
 
-class _SignupPageState extends State<SignupPage> {
+class _SignupPageState extends State<SignupPage>
+    with SingleTickerProviderStateMixin {
   final formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
 
+  late AnimationController _shakeController;
+  late Animation<double> _shakeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _shakeAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: -10.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -10.0, end: 10.0), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 10.0, end: -10.0), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -10.0, end: 0.0), weight: 1),
+    ]).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut));
+  }
+
   @override
   void dispose() {
+    _shakeController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _signUp() async {
-    if (!formKey.currentState!.validate()) return;
+    if (!formKey.currentState!.validate()) {
+      _shakeController.forward(from: 0);
+      return;
+    }
     setState(() => _isLoading = true);
     final result = await AuthServices().createAccountWithEmail(
         _emailController.text, _passwordController.text);
@@ -88,129 +112,164 @@ class _SignupPageState extends State<SignupPage> {
                   children: [
                     const SizedBox(height: 48),
                     const Icon(Icons.person_add_rounded,
-                        size: 56, color: Colors.white),
+                            size: 56, color: Colors.white)
+                        .animate()
+                        .scale(
+                          begin: const Offset(0.5, 0.5),
+                          duration: AppTheme.kSlow,
+                          curve: Curves.elasticOut,
+                        ),
                     const SizedBox(height: 20),
-                    Text("Create Account", style: AppTheme.headingLarge),
+                    Text("Create Account", style: AppTheme.headingLarge)
+                        .animate(delay: 100.ms)
+                        .fadeIn(duration: AppTheme.kMedium)
+                        .slideX(begin: -0.2, end: 0.0),
                     const SizedBox(height: 6),
                     Text(
                       "Join us today",
-                      style: AppTheme.caption.copyWith(
-                          color: Colors.white70, fontSize: 15),
-                    ),
+                      style: AppTheme.caption
+                          .copyWith(color: Colors.white70, fontSize: 15),
+                    )
+                        .animate(delay: 200.ms)
+                        .fadeIn(duration: AppTheme.kMedium),
                   ],
                 ),
               ),
             ),
           ),
 
-          // White bottom card
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              height: size.height * 0.65,
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(36)),
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(28, 32, 28, 24),
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text("Sign Up", style: AppTheme.headingMedium),
-                      const SizedBox(height: 28),
+          // White bottom card with shake animation
+          AnimatedBuilder(
+            animation: _shakeAnimation,
+            builder: (context, child) => Transform.translate(
+              offset: Offset(_shakeAnimation.value, 0),
+              child: child,
+            ),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                height: size.height * 0.65,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(36)),
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(28, 32, 28, 24),
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text("Sign Up", style: AppTheme.headingMedium)
+                            .animate(delay: 100.ms)
+                            .fadeIn(duration: AppTheme.kMedium)
+                            .slideY(begin: 0.2, end: 0.0),
+                        const SizedBox(height: 28),
 
-                      // Email
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) =>
-                            v!.isEmpty ? "Email cannot be empty" : null,
-                        decoration: AppTheme.inputDecoration(
-                          label: "Email",
-                          icon: Icons.email_outlined,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Password
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        validator: (v) => v!.length < 8
-                            ? "Password must be at least 8 characters"
-                            : null,
-                        decoration: AppTheme.inputDecoration(
-                          label: "Password",
-                          icon: Icons.lock_outline,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                              color: Colors.grey,
-                            ),
-                            onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword),
+                        // Email
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (v) =>
+                              v!.isEmpty ? "Email cannot be empty" : null,
+                          decoration: AppTheme.inputDecoration(
+                            label: "Email",
+                            icon: Icons.email_outlined,
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 28),
+                        )
+                            .animate(delay: 200.ms)
+                            .fadeIn(duration: AppTheme.kMedium)
+                            .slideY(begin: 0.2, end: 0.0),
+                        const SizedBox(height: 16),
 
-                      // Sign up button
-                      ElevatedButton(
-                        onPressed: _isLoading ? null : _signUp,
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2),
-                              )
-                            : const Text("Sign Up"),
-                      ),
-                      const SizedBox(height: 20),
+                        // Password
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          validator: (v) => v!.length < 8
+                              ? "Password must be at least 8 characters"
+                              : null,
+                          decoration: AppTheme.inputDecoration(
+                            label: "Password",
+                            icon: Icons.lock_outline,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword),
+                            ),
+                          ),
+                        )
+                            .animate(delay: 300.ms)
+                            .fadeIn(duration: AppTheme.kMedium)
+                            .slideY(begin: 0.2, end: 0.0),
+                        const SizedBox(height: 28),
 
-                      _orDivider(),
-                      const SizedBox(height: 20),
+                        // Sign up button
+                        ElevatedButton(
+                          onPressed: _isLoading ? null : _signUp,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2),
+                                )
+                              : const Text("Sign Up"),
+                        )
+                            .animate(delay: 400.ms)
+                            .fadeIn(duration: AppTheme.kMedium)
+                            .slideY(begin: 0.2, end: 0.0),
+                        const SizedBox(height: 20),
 
-                      // Google sign-in
-                      OutlinedButton(
-                        onPressed: _isLoading ? null : _googleSignIn,
-                        child: Row(
+                        _orDivider()
+                            .animate(delay: 500.ms)
+                            .fadeIn(duration: AppTheme.kMedium),
+                        const SizedBox(height: 20),
+
+                        // Google sign-in
+                        OutlinedButton(
+                          onPressed: _isLoading ? null : _googleSignIn,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset("images/gg.png",
+                                  height: 22, width: 22),
+                              const SizedBox(width: 10),
+                              const Text("Continue with Google"),
+                            ],
+                          ),
+                        )
+                            .animate(delay: 500.ms)
+                            .fadeIn(duration: AppTheme.kMedium)
+                            .slideY(begin: 0.2, end: 0.0),
+                        const SizedBox(height: 24),
+
+                        // Login link
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Image.asset("images/gg.png",
-                                height: 22, width: 22),
-                            const SizedBox(width: 10),
-                            const Text("Continue with Google"),
+                            Text("Already have an account?",
+                                style: AppTheme.caption
+                                    .copyWith(color: Colors.grey.shade600)),
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.pushNamed(context, "/login"),
+                              child: const Text("Login",
+                                  style: TextStyle(
+                                      color: AppTheme.primary,
+                                      fontWeight: FontWeight.w600)),
+                            ),
                           ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Login link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("Already have an account?",
-                              style: AppTheme.caption
-                                  .copyWith(color: Colors.grey.shade600)),
-                          TextButton(
-                            onPressed: () =>
-                                Navigator.pushNamed(context, "/login"),
-                            child: const Text("Login",
-                                style: TextStyle(
-                                    color: AppTheme.primary,
-                                    fontWeight: FontWeight.w600)),
-                          ),
-                        ],
-                      ),
-                    ],
+                        ).animate(delay: 600.ms).fadeIn(duration: AppTheme.kMedium),
+                      ],
+                    ),
                   ),
                 ),
               ),
