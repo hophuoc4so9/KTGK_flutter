@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:hotuanphuoc_2224802010872_lab4/common/common.dart';
 import 'package:hotuanphuoc_2224802010872_lab4/controllers/auth_services.dart';
 
 class SignupPage extends StatefulWidget {
@@ -11,154 +11,212 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
   final formKey = GlobalKey<FormState>();
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signUp() async {
+    if (!formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+    final result = await AuthServices().createAccountWithEmail(
+        _emailController.text, _passwordController.text);
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    if (result == "Account created") {
+      Navigator.pushReplacementNamed(context, "/home");
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(result, style: const TextStyle(color: Colors.white)),
+        backgroundColor: AppTheme.errorRed,
+      ));
+    }
+  }
+
+  Future<void> _googleSignIn() async {
+    setState(() => _isLoading = true);
+    final result =
+        await AuthServices().continueWithGoogle().catchError((e) => e.toString());
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    if (result == "Login successful") {
+      Navigator.pushReplacementNamed(context, "/home");
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(result, style: const TextStyle(color: Colors.white)),
+        backgroundColor: AppTheme.errorRed,
+      ));
+    }
+  }
+
+  Widget _orDivider() {
+    return Row(children: [
+      Expanded(child: Divider(color: Colors.grey.shade300)),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Text("OR",
+            style: AppTheme.caption.copyWith(fontWeight: FontWeight.w600)),
+      ),
+      Expanded(child: Divider(color: Colors.grey.shade300)),
+    ]);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Form(
-          key: formKey,
-          child: Column(children: [
-            SizedBox(height: 90),
-
-            Text("Sign Up"),
-
-            SizedBox(height: 10),
-
-            // EMAIL
-            SizedBox(
-              width: MediaQuery.of(context).size.width * .9,
-              child: TextFormField(
-                validator: (value) =>
-                    value!.isEmpty ? "Email cannot be empty" : null,
-                controller: _emailController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  label: Text("email"),
-                ),
-              ),
+      body: Stack(
+        children: [
+          // Gradient background
+          Container(
+            decoration: const BoxDecoration(
+              gradient: AppTheme.authBackgroundGradient,
             ),
-
-            SizedBox(height: 10),
-
-            // PASSWORD
-            SizedBox(
-              width: MediaQuery.of(context).size.width * .9,
-              child: TextFormField(
-                validator: (value) => value!.length < 8
-                    ? "Password should have at least 8 characters"
-                    : null,
-                controller: _passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  label: Text("Password"),
-                ),
-              ),
-            ),
-
-            SizedBox(height: 10),
-
-            SizedBox(
-              height: 65,
-              width: MediaQuery.of(context).size.width * .9,
-              child: ElevatedButton(
-                onPressed: () {
-                  if (formKey.currentState!.validate()) {
-                    AuthServices()
-                        .createAccountWithEmail(
-                            _emailController.text,
-                            _passwordController.text)
-                        .then((result) {
-                      if (result == "Account created") {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Account created")),
-                        );
-
-                        Navigator.pushReplacementNamed(context, "/home");
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              result,
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            backgroundColor: Colors.red.shade400,
-                          ),
-                        );
-                      }
-                    });
-                  }
-                },
-                child: Text("Sign Up", style: TextStyle(fontSize: 16)),
-              ),
-            ),
-
-            SizedBox(height: 10),
-
-            SizedBox(
-              height: 65,
-              width: MediaQuery.of(context).size.width * .9,
-              child: OutlinedButton(
-                onPressed: () {
-                  AuthServices().continueWithGoogle().then((result) {
-                    if (result == "Login successful") {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Signup successful")),
-                      );
-
-                      Navigator.pushReplacementNamed(context, "/home");
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            result,
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          backgroundColor: Colors.red.shade400,
-                        ),
-                      );
-                    }
-                  }).catchError((e) {
-                    print("Error $e");
-                  });
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Image.asset(
-                      "images/gg.png",
-                      height: 30,
-                      width: 30,
-                    ),
-                    SizedBox(width: 10),
+                    const SizedBox(height: 48),
+                    const Icon(Icons.person_add_rounded,
+                        size: 56, color: Colors.white),
+                    const SizedBox(height: 20),
+                    Text("Create Account", style: AppTheme.headingLarge),
+                    const SizedBox(height: 6),
                     Text(
-                      "Continue with Google",
-                      style: TextStyle(fontSize: 16),
-                    )
+                      "Join us today",
+                      style: AppTheme.caption.copyWith(
+                          color: Colors.white70, fontSize: 15),
+                    ),
                   ],
                 ),
               ),
             ),
+          ),
 
-            SizedBox(height: 10),
+          // White bottom card
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: size.height * 0.65,
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius:
+                    BorderRadius.vertical(top: Radius.circular(36)),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(28, 32, 28, 24),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text("Sign Up", style: AppTheme.headingMedium),
+                      const SizedBox(height: 28),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Already have an account?"),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, "/login");
-                  },
-                  child: Text("Login"),
-                )
-              ],
-            )
-          ]),
-        ),
+                      // Email
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (v) =>
+                            v!.isEmpty ? "Email cannot be empty" : null,
+                        decoration: AppTheme.inputDecoration(
+                          label: "Email",
+                          icon: Icons.email_outlined,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Password
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        validator: (v) => v!.length < 8
+                            ? "Password must be at least 8 characters"
+                            : null,
+                        decoration: AppTheme.inputDecoration(
+                          label: "Password",
+                          icon: Icons.lock_outline,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+
+                      // Sign up button
+                      ElevatedButton(
+                        onPressed: _isLoading ? null : _signUp,
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2),
+                              )
+                            : const Text("Sign Up"),
+                      ),
+                      const SizedBox(height: 20),
+
+                      _orDivider(),
+                      const SizedBox(height: 20),
+
+                      // Google sign-in
+                      OutlinedButton(
+                        onPressed: _isLoading ? null : _googleSignIn,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset("images/gg.png",
+                                height: 22, width: 22),
+                            const SizedBox(width: 10),
+                            const Text("Continue with Google"),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Login link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("Already have an account?",
+                              style: AppTheme.caption
+                                  .copyWith(color: Colors.grey.shade600)),
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.pushNamed(context, "/login"),
+                            child: const Text("Login",
+                                style: TextStyle(
+                                    color: AppTheme.primary,
+                                    fontWeight: FontWeight.w600)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
