@@ -7,6 +7,7 @@ import 'package:hotuanphuoc_2224802010872_lab4/firebase_options.dart';
 import 'package:hotuanphuoc_2224802010872_lab4/home.dart';
 import 'package:hotuanphuoc_2224802010872_lab4/login_page.dart';
 import 'package:hotuanphuoc_2224802010872_lab4/screens/settings_screen.dart';
+import 'package:hotuanphuoc_2224802010872_lab4/screens/splash_screen.dart';
 import 'package:hotuanphuoc_2224802010872_lab4/sign_up_page.dart';
 
 void main() async {
@@ -28,7 +29,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routes: {
-        "/": (context) => const CheckUser(),
+        "/": (context) => const SplashScreen(),
+        "/check": (context) => const CheckUser(),
         "/login": (context) => const LoginPage(),
         "/signup": (context) => const SignupPage(),
         "/home": (context) => const HomeScreen(),

@@ -140,4 +140,31 @@ class AppTheme {
           ),
         ),
       );
+
+  // Animation duration constants
+  static const Duration kFast = Duration(milliseconds: 200);
+  static const Duration kMedium = Duration(milliseconds: 350);
+  static const Duration kSlow = Duration(milliseconds: 500);
+
+  // Chat background
+  static const Color kChatBackground = Color(0xFFF0F0F8);
+
+  // Custom slide+fade page transition
+  static Route<T> pageTransition<T>(Widget page) {
+    return PageRouteBuilder<T>(
+      pageBuilder: (_, a, _) => page,
+      transitionDuration: kMedium,
+      reverseTransitionDuration: kFast,
+      transitionsBuilder: (_, animation, _, child) => SlideTransition(
+        position: animation.drive(
+          Tween(begin: const Offset(1.0, 0.0), end: Offset.zero)
+              .chain(CurveTween(curve: Curves.easeInOut)),
+        ),
+        child: FadeTransition(
+          opacity: animation.drive(Tween(begin: 0.0, end: 1.0)),
+          child: child,
+        ),
+      ),
+    );
+  }
 }
