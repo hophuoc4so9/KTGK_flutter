@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:hotuanphuoc_2224802010872_lab5/models/catalog.dart';
+import 'package:task1/models/catalog.dart';
 
 class CartModel extends ChangeNotifier {
   CartModel({required CatalogModel catalog}) : _catalog = catalog;

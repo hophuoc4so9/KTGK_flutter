@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:hotuanphuoc_2224802010872_lab5/models/cart.dart';
-import 'package:hotuanphuoc_2224802010872_lab5/models/catalog.dart';
+
 import 'package:provider/provider.dart';
+import 'package:task1/models/cart.dart';
+import 'package:task1/models/catalog.dart';
 
 void main() {
   runApp(
